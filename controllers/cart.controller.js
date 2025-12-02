@@ -1,10 +1,10 @@
-import { Cart } from "../models/cart.model";
-import { User } from "../models/user.model";
-import { checkProductExists } from "../services/cart.service";
+import { Cart } from "../models/cart.model.js";
+import { User } from "../models/user.model.js";
+import { checkProductExists } from "../services/cart.service.js";
 import {
   addProductToCartValidator,
   editCartValidator,
-} from "../utils/validators";
+} from "../utils/validators.js";
 
 export const addToCart = async (req, res) => {
   try {
