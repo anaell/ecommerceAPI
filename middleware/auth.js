@@ -9,14 +9,20 @@ export const verifyJWT = async (req, res, next) => {
 
     const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
 
-    if (!decoded) {
-      return res.status(401).json({ error: "Invalid access token" });
-    }
-
     req.user = decoded;
     next();
   } catch (error) {
-    console.error(`Error in the verifyJWT. \n Error occured is:\n ${error}`);
+    // Handle JWT-specific errors
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token expired" });
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    // Unexpected errors
+    console.error("Unexpected JWT error:", error);
     return res.status(500).json({ error: "Something went wrong" });
   }
 };

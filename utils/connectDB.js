@@ -8,6 +8,10 @@ export const connectDB = async () => {
       .connect(process.env.MONGODB_URI)
       .then(() => console.log("Database connected"));
   } catch (error) {
+    console.error(
+      `This error occured when connecting to the database:\n${error}`
+    );
+
     throw new Error("Error connecting to database");
   }
 };
