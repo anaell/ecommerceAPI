@@ -3,6 +3,10 @@
 
 A Node.js + Express + MongoDB e-commerce backend that supports authentication, product management, cart operations, and Paystack-powered payments with transactional integrity and webhook handling.
 
+## 🌐 Project URL
+
+Project page: [https://github.com/anaell/ecommerceAPI](https://github.com/anaell/ecommerceAPI)
+
 ---
 
 ## 🚀 Features
