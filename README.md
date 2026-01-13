@@ -7,7 +7,12 @@ A Node.js + Express + MongoDB e-commerce backend that supports authentication, p
 
 Project page: [https://github.com/anaell/ecommerceAPI](https://github.com/anaell/ecommerceAPI)
 
----
+## 🌐 Roadmap.sh Project URL
+
+This backend API was built as part of the [roadmap.sh](https://roadmap.sh) learning projects.  
+You can view the official project description and requirements here:
+
+## 👉 [https://roadmap.sh/projects/ecommerce-api](https://roadmap.sh/projects/ecommerce-api)
 
 ## 🚀 Features
 
