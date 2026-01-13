@@ -3,8 +3,8 @@ import {
   handleWebHook,
   initializePayment,
   verifyPayment,
-} from "../controllers/payment.controller";
-import { verifyJWT } from "../middleware/auth";
+} from "../controllers/payment.controller.js";
+import { verifyJWT } from "../middleware/auth.js";
 
 const router = Router();
 

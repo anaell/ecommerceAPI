@@ -1,7 +1,7 @@
 import axios from "axios";
-import { Cart } from "../models/cart.model";
-import { Payment } from "../models/payment.model";
-import { Product } from "../models/product.model";
+import { Cart } from "../models/cart.model.js";
+import { Payment } from "../models/payment.model.js";
+import { Product } from "../models/product.model.js";
 import "node:crypto";
 import { startSession } from "mongoose";
 
