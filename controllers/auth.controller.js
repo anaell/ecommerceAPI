@@ -28,7 +28,7 @@ export const signUp = async (req, res) => {
     const payload = {
       email: newUser.email,
       role: newUser.role,
-      id: user._id,
+      id: newUser._id,
     };
 
     const {
@@ -59,7 +59,7 @@ export const signUp = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const validatedBody = loginValidator(req.body);
+    const validatedBody = loginValidator.parse(req.body);
     const { email, password } = validatedBody;
 
     const user = await checkUserExists(email);

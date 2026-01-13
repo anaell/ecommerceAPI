@@ -11,7 +11,7 @@ export const addToCart = async (req, res) => {
     const { id: userId } = req.user;
     const validatedBody = addProductToCartValidator.parse(req.body);
     const { product: productId, quantity } = validatedBody;
-    const productExists = checkProductExists(productId);
+    const productExists = await checkProductExists(productId);
     if (!productExists) {
       return res.status(404).json({ error: "Product not found" });
     }
@@ -39,13 +39,11 @@ export const addToCart = async (req, res) => {
     );
 
     if (checkIfProductAlreadyInCart) {
-      const updatedCart = await cartExists
-        .findOneAndUpdate(
-          { "products.product": productId, user: userId },
-          { $inc: { "products.$.quantity": quantity } },
-          { new: true }
-        )
-        .populate("products.product");
+      const updatedCart = await Cart.findOneAndUpdate(
+        { "products.product": productId, user: userId },
+        { $inc: { "products.$.quantity": quantity } },
+        { new: true }
+      ).populate("products.product");
       return res.status(200).json({
         data: updatedCart,
         message: "Product added successfully to cart",

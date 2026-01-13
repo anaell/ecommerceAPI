@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.route.js";
 import productRouter from "./routes/product.route.js";
 import cartRouter from "./routes/cart.route.js";
+import paymentRouter from "./routes/payment.route.js";
 import { verifyJWT } from "./middleware/auth.js";
 
 configDotenv();
@@ -27,6 +28,7 @@ app.use(
 app.use("/auth", authRouter);
 app.use("/product", productRouter);
 app.use("/cart", verifyJWT, cartRouter);
+app.use("/payment", paymentRouter);
 
 app.listen(process.env.PORT, () => {
   console.log(

@@ -17,7 +17,7 @@ export const createProductValidator = z.object({
     .number()
     .min(0, { error: "Price is required and must be greater than zero (0)" }),
   description: z.string().min(1, { error: "Description is required" }),
-  stock: z
+  stocks: z
     .number()
     .min(0, { error: "Price is required and must be greater than zero (0)" }),
 });
@@ -32,7 +32,9 @@ export const addProductToCartValidator = z.object({
   product: z
     .string()
     .min(1, { error: "Product must be included. Cannot be empty" }),
-  amount: z.number().min(1, { error: "Amount cannot be negative or empty" }),
+  quantity: z
+    .number()
+    .min(1, { error: "Quantity cannot be negative or empty" }),
 });
 
 export const editCartValidator = addProductToCartValidator.partial();
