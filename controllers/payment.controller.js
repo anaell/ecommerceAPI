@@ -6,15 +6,19 @@ import "node:crypto";
 import { startSession } from "mongoose";
 
 export const initializePayment = async (req, res) => {
+  const session = await startSession();
+  session.startTransaction();
   try {
     const { id: userId, email } = req.user;
     // Find user's cart
-    const userCart = await Cart.findOne({ user: userId }).populate(
-      "products.product"
-    );
+    const userCart = await Cart.findOne({ user: userId })
+      .populate("products.product")
+      .session(session);
     // Check if cart is empty or if cart does not exist.
-    if (!userCart || userCart.products.length === 0)
+    if (!userCart || userCart.products.length === 0) {
+      await session.abortTransaction();
       return res.status(400).json({ error: "Cart is empty or not found" });
+    }
 
     let totalAmount = 0;
     const products_in_cart = userCart.products.map((product) => {
@@ -35,7 +39,7 @@ export const initializePayment = async (req, res) => {
 
     // This check if there's any product stock that is lower than the quantity being ordered.
     const stock_issues = [];
-    const check_product_stock = await userCart.products.map((product) => {
+    const check_product_stock = userCart.products.map((product) => {
       const stock = product.product.stocks;
       if (stock < product.quantity) {
         return stock_issues.push({
@@ -45,8 +49,10 @@ export const initializePayment = async (req, res) => {
     });
 
     // If there are stock issues run this.
-    if (stock_issues.length > 0)
+    if (stock_issues.length > 0) {
+      await session.abortTransaction();
       return res.status(410).json({ issue: stock_issues });
+    }
 
     // Make a request to paystack to initalize using axios
     const paystackResponse = await axios.post(
@@ -61,27 +67,37 @@ export const initializePayment = async (req, res) => {
     );
 
     // Create the payment snapshot in the database
-    await Payment.create({
-      user: userId,
-      products: products_in_cart,
-      totalAmount,
-      reference: uniqueReference,
-    });
+    await Payment.create(
+      {
+        user: userId,
+        products: products_in_cart,
+        totalAmount,
+        reference: uniqueReference,
+      },
+      { session }
+    );
 
     // Return the Paystack Authorization URL
+    await session.commitTransaction();
     res.status(200).json({
       data: paystackResponse.data.data.authorization_url,
       reference: uniqueReference,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error(
       `This error Happened in the initialize payment in the payment controller. \n${error}`
     );
     return res.status(500).json({ error: "Could not initialize payment" });
+  } finally {
+    await session.endSession();
   }
 };
 
 export const verifyPayment = async (req, res) => {
+  const session = await startSession();
+  session.startTransaction();
+
   try {
     // Get the reference
     const { reference } = req.query;
@@ -100,40 +116,54 @@ export const verifyPayment = async (req, res) => {
 
     // If success do the below
     if (status === "success") {
-      const payment = await Payment.findOne({ reference });
+      const payment = await Payment.findOne({ reference }).session(session);
 
       // Check if payment record exists
-      if (!payment)
+      if (!payment) {
+        await session.abortTransaction();
         return res.status(404).json({ error: "Payment record not found" });
+      }
 
       // Check if payment has already been worked on
-      if (payment.paymentStatus === "success")
+      if (payment.paymentStatus === "success") {
+        await session.abortTransaction();
         return res.status(200).json({ message: "Payment already verified" });
+      }
 
       // Update the payment and delivery status to success
       payment.paymentStatus = "success";
       payment.deliveryStatus = "paid";
-      await payment.save();
+      await payment.save({ session });
 
       // To decrement the stocks for the products purchased
       for (const product of payment.products) {
-        await Product.findByIdAndUpdate(product.product, {
-          $inc: { stocks: -product.quantity },
-        });
+        await Product.findByIdAndUpdate(
+          product.product,
+          {
+            $inc: { stocks: -product.quantity },
+          },
+          { session }
+        );
       }
 
       // Delete the user's cart
-      await Cart.findOneAndDelete({ user: payment.user });
+      await Cart.findOneAndDelete({ user: payment.user }, { session });
+
+      await session.commitTransaction();
 
       return res.status(200).json({ message: "Payment was successful" });
     }
-
+    await session.abortTransaction();
     res.status(400).json({ error: "Payment verification failed" });
   } catch (error) {
+    await session.abortTransaction();
+
     console.error(
       `This error Happened in the verify payment in the payment controller. \n${error}`
     );
     res.status(500).json("Something went wrong");
+  } finally {
+    await session.endSession();
   }
 };
 
@@ -210,12 +240,19 @@ export const handleWebHook = async (req, res) => {
         payment.deliveryStatus = "cancelled";
         await payment.save({ session }); // Pass session to save
 
+        // Delete the user's cart
+        await Cart.findOneAndDelete({ user: payment.user }, { session });
+
         // We commit here because the "Refund" is a new business state
         await session.commitTransaction();
 
         const refund_data = { reference, products: stock_issues };
-        handleRefund(refund_data);
-        return res.status(200).json({ message: "A refund will be made" });
+        await handleRefund(refund_data);
+
+        return res.status(200).json({
+          message:
+            "A refund will be made.\nOut of stock. Refund initiated and cart cleared.",
+        });
       }
 
       // Delete the user's cart
