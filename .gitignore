@@ -1,3 +1,6 @@
 .env
 node_modules
 statuscodes.txt
+notes
+res_cheatsheet.txt
+.vscode/

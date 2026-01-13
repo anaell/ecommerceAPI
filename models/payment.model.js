@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 
 const PaymentSchema = new Schema(
   {
@@ -11,7 +11,20 @@ const PaymentSchema = new Schema(
       },
     ],
     totalAmount: { type: Number, required: true },
-    status: {
+    // reference is from Paystack, helps to find the transaction.
+    reference: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    // Money status, to know if the payment was successful or not.
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "success", "failed", "pending-refund"],
+      default: "pending",
+    },
+    // Delivery status, to know if the product has been delivered.
+    deliveryStatus: {
       type: String,
       enum: ["pending", "paid", "shipped", "delivered", "cancelled"],
       default: "pending",

@@ -1,0 +1,1 @@
+1. You can add soft delete implementation for the cart. But make sure to clear the cart field for the user and also set that cart instance not to be accessible.

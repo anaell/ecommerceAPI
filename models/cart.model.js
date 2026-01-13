@@ -22,6 +22,13 @@ const CartSchema = new Schema(
       required: true,
       unique: true,
     },
+
+    // If you wanna implement soft delete for the cart. A starting point.
+    // isDeleted: {
+    //   type: Boolean,
+    //   required: true,
+    //   default: false,
+    // },
   },
   { timestamps: true }
 );
