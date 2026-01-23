@@ -8,6 +8,7 @@ import productRouter from "./routes/product.route.js";
 import cartRouter from "./routes/cart.route.js";
 import paymentRouter from "./routes/payment.route.js";
 import { verifyJWT } from "./middleware/auth.js";
+import { rateLimitMiddleware } from "./middleware/rate_limiter.js";
 
 configDotenv();
 
@@ -22,16 +23,16 @@ app.use(
     verify: (req, res, buf) => {
       req.rawBody = buf; // Store the raw buffer for webhook verification
     },
-  })
+  }),
 );
 
-app.use("/auth", authRouter);
-app.use("/product", productRouter);
-app.use("/cart", verifyJWT, cartRouter);
-app.use("/payment", paymentRouter);
+app.use("/auth", rateLimitMiddleware, authRouter);
+app.use("/product", rateLimitMiddleware, productRouter);
+app.use("/cart", rateLimitMiddleware, verifyJWT, cartRouter);
+app.use("/payment", rateLimitMiddleware, paymentRouter);
 
 app.listen(process.env.PORT, () => {
   console.log(
-    `Server started at ${process.env.PORT} \nAccess via http://localhost:${process.env.PORT}`
+    `Server started at ${process.env.PORT} \nAccess via http://localhost:${process.env.PORT}`,
   );
 });
